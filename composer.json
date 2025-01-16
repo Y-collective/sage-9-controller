@@ -1,5 +1,5 @@
 {
-  "name": "soberwp/controller",
+  "name": "y-collective/sage-9-controller",
   "type": "package",
   "license": "MIT",
   "description": "WordPress package to enable a basic controller when using Blade with Sage 9",
@@ -15,7 +15,7 @@
     "wordpress"
   ],
   "support": {
-    "issues": "https://github.com/soberwp/controller/issues"
+    "issues": "https://github.com/y-collective/sage-9-controller/issues"
   },
   "require": {
     "php": "^8.2|^8.3",
