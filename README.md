@@ -27,20 +27,18 @@ WordPress package to enable a controller when using Blade with [Sage 9](https://
 [Sage](https://roots.io/sage/) ships with Controller. However, should you need to install, browse into the Sage theme directory and run;
 
 ```shell
-$ composer require soberwp/controller:2.1.2
+$ composer require y-collective/sage-9-controller:^3.0
 ```
 
-### Upgrading to 2.x.x:
+### Migrating from 2.x.x to 3.x.x:
 
-Please note that versions 2.x.x are newer releases than 9.x.x-beta. The 9 was used to match Sage 9 versioning at the time.
+Version 3.0.0 requires **PHP 8.2+** and upgrades `brain/hierarchy` to ^3.2.0. All source files now use strict types, typed properties, and typed return values. No API changes are needed in your Controller classes.
 
-Controller 2.x.x uses [PSR4 autoloading](https://www.php-fig.org/psr/psr-4/) to load Controller classes. This is considered best practice. You will need to [update the following files](https://github.com/roots/sage/pull/2025/files) from 9.0.0-beta versions. 
-
-Folder `controllers/` changes to `Controllers/`, class file names changes to camelcase `App.php` and `FrontPage.php`. Controller namespaces changes to `namespace App\Controllers;`
+If you were using `soberwp/controller:^2.1`, simply replace the package name in your `composer.json`.
 
 ### Requirements:
 
-* [PHP](http://php.net/manual/en/install.php) >= 7.0
+* [PHP](http://php.net/manual/en/install.php) >= 8.2
 
 ## Setup
 
@@ -352,13 +350,11 @@ To wrap the code in if statements, use `@codeif`
 
 ## Support
 
-* Follow [@withjacoby](https://twitter.com/withjacoby) on Twitter
-* Buy me a beer or pay my rent, [paypal.me/darrenjacoby](https://paypal.me/darrenjacoby)
+* Open an issue at [github.com/y-collective/sage-9-controller](https://github.com/y-collective/sage-9-controller)
 
 ## Updates
 
-* Change the composer.json version to 2.1.2
-* Check [CHANGELOG.md](CHANGELOG.md) for any breaking changes before updating.
+* Check [CHANGELOG.md](CHANGELOG.md) for breaking changes before updating.
 
 ```shell
 $ composer update
