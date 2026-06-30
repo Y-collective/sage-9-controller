@@ -1,3 +1,22 @@
+### 3.0.0:
+* Modernize codebase for PHP 8.2+
+* Declare strict types in all files
+* Add typed properties, parameter types, and return types to all classes
+* Fix `__setDatafromModuleAcf()` method typo → `__setDataFromModuleAcf()`
+* Fix undefined array key risks for `__app` and `__store` with null coalescing
+* Fix `array_filter` with side-effect assignment in `__setDataFromMethods()`
+* Fix `Loader::setPath()` to check `class_exists()` before `ReflectionClass`
+* Fix `Loader::setClassesAlias()` to avoid alias collisions and missing class errors
+* Fix `Loader::addBodyDataClasses()` uninitialized `$classes` array
+* Fix `Coder::render()` empty data edge case with `call_user_func_array('array_merge', ...)`
+* Fix `Utils::doesFileContain()` to suppress errors on unreadable files
+* Fix `Acf::recursiveSnakeCase()` to convert kebab-case keys at all array levels
+* Fix `Acf::setData()` to handle null returns from `get_field()`/`get_fields()`
+* Remove redundant `final` keyword from private methods
+* Rebase php constraint to `^8.2` (covers 8.2–8.x)
+* Change package `type` from `"package"` to `"library"`
+* Fix `homepage` to point to fork repository
+
 ### 2.1.2:
 * Fixes
 

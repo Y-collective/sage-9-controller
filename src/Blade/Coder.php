@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Sober\Controller\Blade;
 
 use Sober\Controller\Blade;
@@ -7,251 +9,154 @@ use Sober\Controller\Utils;
 
 class Coder extends Blade
 {
-    private $code = '';
-    private $indentation = '';
-    private $includes;
-    private $codeif;
+    private string $code = '';
+    private string $indentation = '';
+    private array $includes = [];
+    private bool $codeif;
 
-    /**
-     * Construct
-     *
-     * Initialise the Code methods
-     */
-    public function __construct($data, $includes, $codeif = false)
+    public function __construct(array $data, string|array $includes = '', bool $codeif = false)
     {
-        // codeif
         $this->codeif = $codeif;
 
-        // Set data from @code('var')
         $this->setIncludeData($includes);
-
-        // Set data from $data['__data']['__blade']
         $this->setBladeData($data);
-
-        // Render to view
         $this->render();
     }
 
-    private function setIncludeData($includes)
+    private function setIncludeData(string|array $includes): void
     {
-        $this->includes = $includes;
-
-        if (is_string($this->includes)) {
-            $this->includes = [$this->includes];
-        }
+        $this->includes = is_string($includes) ? [$includes] : $includes;
     }
 
-    /**
-     * Increase Indentation
-     *
-     * Add two spaces to $this->indentation
-     */
-    private function increaseIndentation()
+    private function increaseIndentation(): void
     {
-        $this->indentation = "{$this->indentation}  ";
+        $this->indentation .= '  ';
     }
 
-    /**
-     * Decrease Indentation
-     *
-     * Remove two spaces from $this->indentation
-     */
-    private function decreaseIndentation()
+    private function decreaseIndentation(): void
     {
         $this->indentation = substr($this->indentation, 0, -2);
     }
 
-    /**
-     * Render
-     *
-     * Loop through $this->data and echo code
-     */
-    private function render()
+    private function render(): void
     {
-        // Map the data results to exclude static methods
         $this->data = array_map(function ($item) {
             return $item->data;
         }, $this->data);
 
-        // Remove the first level of the array so that we are left with flat variables
-        $this->data = call_user_func_array('array_merge', $this->data);
+        if (empty($this->data)) {
+            return;
+        }
 
-        // Remove $post by default
+        $this->data = array_merge(...$this->data);
+
         unset($this->data['post']);
 
-        // Start @code block
-        $type = ($this->codeif ? '@codeif' : '@code');
-        echo "<pre class=\"coder\"><strong>{$type}</strong><br>";
+        $type = $this->codeif ? '@codeif' : '@code';
+        echo '<pre class="coder"><strong>' . $type . '</strong><br>';
 
-        // Run through each item
         foreach ($this->data as $name => $value) {
-            // Remove the method/returned for data methods
             $value = (isset($value->method) ? $value->returned : $value);
-            
-            // Router
-            // @code('var')
-            if ($this->includes && in_array($name, $this->includes)) {
+
+            if (!empty($this->includes) && in_array($name, $this->includes, true)) {
                 $this->router($name, $value);
             }
 
-            // @code
-            if (!$this->includes) {
+            if (empty($this->includes)) {
                 $this->router($name, $value);
             }
         }
 
-        // End @code block
         echo '</pre>';
     }
 
-    /**
-     * Router
-     *
-     * Route data types to correct methods
-     */
-    private function router($name, $val)
+    private function router(string $name, mixed $val): void
     {
-        // Route object
         if (is_object($val)) {
             $this->renderObj($name, $val);
         }
 
-        // Route indexed array
         if (is_array($val) && Utils::isArrayIndexed($val)) {
             $this->renderArrIndexed($name, $val);
         }
 
-        // Route array with keys
         if (is_array($val) && !Utils::isArrayIndexed($val)) {
             $this->renderArrKeys($name, $val);
         }
 
-        // Route strings/other
         if (!is_array($val) && !is_object($val)) {
-            // Add to $this->code
             $this->renderResult($name, $val);
-
-            // Clear out $this-code
             $this->code = '';
-
-            // Exit
-            return;
         }
     }
 
-    /**
-     * Render Object
-     *
-     * Render an object
-     */
-    private function renderObj($name, $val)
+    private function renderObj(string $name, object $val): void
     {
-        // Get props of object
         $props = get_object_vars($val);
 
-        // For each of those props
         foreach ($props as $prop_name => $prop_val) {
-            // Add to $this->code
-            $this->code = "{$this->code}{$name}->";
-
-            // Route new values
+            $trail = $this->code;
+            $this->code = $trail . $name . '->';
             $this->router($prop_name, $prop_val);
+            $this->code = $trail;
         }
     }
 
-    /**
-     * Render Indexed Array
-     *
-     * Render an indexed array
-     */
-    private function renderArrIndexed($name, $val)
+    private function renderArrIndexed(string $name, array $val): void
     {
         if ($this->codeif) {
-            // Echo if
-            echo "{$this->indentation}@if (\${$this->code}$name)<br>";
-
-            // Increase indentation
+            echo $this->indentation . '@if ($' . $this->code . $name . ')<br>';
             $this->increaseIndentation();
         }
 
-        // Start foreach
-        echo "{$this->indentation}@foreach (\${$this->code}$name as \$item)<br>";
+        echo $this->indentation . '@foreach ($' . $this->code . $name . ' as $item)<br>';
 
-        // Clear $this->code
         $this->code = '';
-
-        // Increase indentation
         $this->increaseIndentation();
 
-        // Route next value
         foreach ($val as $key_index => $key_val) {
             if (count($val) > 1) {
-                echo "{$this->indentation}<strong>[{$key_index}]</strong><br>";
+                echo $this->indentation . '<strong>[' . $key_index . ']</strong><br>';
             }
             $this->router('item', $key_val);
         }
 
-        // Decrease indentation
         $this->decreaseIndentation();
-    
-        // End foreach
-        echo "{$this->indentation}@endforeach<br>";
+        echo $this->indentation . '@endforeach<br>';
 
         if ($this->codeif) {
-            // Decrease indentation
             $this->decreaseIndentation();
-
-            // Echo endif
-            echo "{$this->indentation}@endif<br>";
+            echo $this->indentation . '@endif<br>';
         }
     }
 
-    /**
-     * Render Array Keys
-     *
-     * Render an array with keys
-     */
-    private function renderArrKeys($name, $val)
+    private function renderArrKeys(string $name, array $val): void
     {
-        // Foreach value add key
         foreach ($val as $key_name => $key_val) {
-            $this->router("{$this->code}{$name}['{$key_name}']", $key_val);
+            $this->router($this->code . $name . "['{$key_name}']", $key_val);
         }
     }
 
-    /**
-     * Render Result
-     *
-     * Render the final result
-     */
-    private function renderResult($name, $val)
+    private function renderResult(string $name, mixed $val): void
     {
-        $this->code = "\${$this->code}{$name}";
+        $this->code = '$' . $this->code . $name;
 
         if ($this->codeif) {
-            // Echo if
-            echo "{$this->indentation}@if ({$this->code})<br>";
-
-            // Increase indentation
+            echo $this->indentation . '@if (' . $this->code . ')<br>';
             $this->increaseIndentation();
         }
 
-        // Wrap with {{ }} or {!! !!}
-        if (Utils::doesStringContainMarkup($val)) {
-            $this->code = "{!! {$this->code} !!}";
+        if (Utils::doesStringContainMarkup((string) $val)) {
+            $this->code = '{!! ' . $this->code . ' !!}';
         } else {
-            $this->code = "{{ {$this->code} }}";
+            $this->code = '{{ ' . $this->code . ' }}';
         }
 
-        // Echo code
-        echo "{$this->indentation}{$this->code}<br>";
-        
-        if ($this->codeif) {
-            // Increase indentation
-            $this->decreaseIndentation();
+        echo $this->indentation . $this->code . '<br>';
 
-            // Echo endif
-            echo "{$this->indentation}@endif<br>";
+        if ($this->codeif) {
+            $this->decreaseIndentation();
+            echo $this->indentation . '@endif<br>';
         }
     }
 }

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Sober\Controller;
 
 use Sober\Controller\Utils;
@@ -7,167 +9,117 @@ use Brain\Hierarchy\Hierarchy;
 
 class Loader
 {
-    // Dep
-    private $hierarchy;
+    private Hierarchy $hierarchy;
 
-    // User
-    private $namespace;
-    private $path;
+    private string $namespace;
+    private string $path;
 
-    // Internal
-    private $listOfFiles;
-    private $classesToRun = [];
+    private \RecursiveIteratorIterator $listOfFiles;
+    private array $classesToRun = [];
 
-    /**
-     * Construct
-     *
-     * Initialise the Loader methods
-     */
     public function __construct(Hierarchy $hierarchy)
     {
-        // Pass in WordPress hierarchy and set to param for reference
         $this->hierarchy = $hierarchy;
 
-        // Set the default or custom namespace used for Controller files
         $this->setNamespace();
-
-        // Set the path using $this->namespace assuming PSR4 autoloading
         $this->setPath();
 
-        // Return if there are no Controller files
         if (!file_exists($this->path)) {
             return;
         }
 
-        // Set the list of files from the Controller files namespace/path
         $this->setListOfFiles();
-
-        // Set the classes to run from the list of files
         $this->setClassesToRun();
-
-        // Set the aliases for static functions from the list of classes to run
         $this->setClassesAlias();
-
-        // Add the -data body classes for the Blade filter
         $this->addBodyDataClasses();
     }
 
-    /**
-     * Set Namespace
-     *
-     * Set the namespace from the filter or use the default
-     */
-    protected function setNamespace()
+    protected function setNamespace(): void
     {
-        $this->namespace =
-            (has_filter('sober/controller/namespace')
+        $this->namespace = has_filter('sober/controller/namespace')
             ? apply_filters('sober/controller/namespace', rtrim($this->namespace))
-            : 'App\Controllers');
+            : 'App\Controllers';
     }
 
-    /**
-     * Set Path
-     *
-     * Set the path assuming PSR4 autoloading from $this->namespace
-     */
-    protected function setPath()
+    protected function setPath(): void
     {
-        $reflection = new \ReflectionClass($this->namespace .'\App');
+        $className = $this->namespace . '\\App';
+
+        if (!class_exists($className)) {
+            $this->path = '';
+            return;
+        }
+
+        $reflection = new \ReflectionClass($className);
         $this->path = dirname($reflection->getFileName());
     }
 
-    /**
-     * Set File List
-     *
-     * Recursively get file list and place into array
-     */
-    protected function setListOfFiles()
+    protected function setListOfFiles(): void
     {
-        $this->listOfFiles = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($this->path));
+        $this->listOfFiles = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator($this->path)
+        );
     }
 
-    /**
-     * Set Class Instances
-     *
-     * Load each Class instance and store in $instances[]
-     */
-    protected function setClassesToRun()
+    protected function setClassesToRun(): void
     {
         foreach ($this->listOfFiles as $filename => $file) {
-            // Exclude non-PHP files
             if (!Utils::isFilePhp($filename)) {
                 continue;
             }
 
-            // Exclude non-Controller classes
             if (!Utils::doesFileContain($filename, 'extends Controller')) {
                 continue;
             }
 
-            // Set the classes to run
             $this->classesToRun[] = $this->namespace . '\\' . pathinfo($filename, PATHINFO_FILENAME);
         }
     }
 
-    /**
-     * Set Class Alias
-     *
-     * Remove namespace from static functions
-     */
-    public function setClassesAlias()
+    public function setClassesAlias(): void
     {
-        // Alias each class from $this->classesToRun
         foreach ($this->classesToRun as $class) {
-            class_alias($class, (new \ReflectionClass($class))->getShortName());
+            if (!class_exists($class)) {
+                continue;
+            }
+
+            $shortName = (new \ReflectionClass($class))->getShortName();
+
+            if (class_exists($shortName)) {
+                continue;
+            }
+
+            class_alias($class, $shortName);
         }
     }
 
-    /**
-     * Set Document Classes
-     *
-     * Set the classes required for the blade filter to pass on data
-     * @return array
-     */
-    protected function addBodyDataClasses()
+    protected function addBodyDataClasses(): void
     {
-        add_filter('body_class', function ($body) {
+        add_filter('body_class', function (array $body): array {
             global $wp_query;
 
-            // Get the template hierarchy from WordPress
             $templates = $this->hierarchy->getTemplates($wp_query);
-
-            // Reverse the templates returned from $this->hierarchy
             $templates = array_reverse($templates);
 
-            // Add app-data to classes array
-            $classes[] = 'app-data';
+            $classes = ['app-data'];
 
             foreach ($templates as $template) {
-                // Exclude .blade.php and index.php
-                if (strpos($template, '.blade.php') || $template === 'index.php') {
+                if (str_contains($template, '.blade.php') || $template === 'index.php') {
                     continue;
                 }
 
-                // Exclude index as we use app
                 if ($template === 'index') {
                     $template = 'index.php';
                 }
 
-                // Replace .php with -data and add to the classes array
                 $classes[] = basename(str_replace('.php', '-data', $template));
             }
 
-            // Return the new body class list for WordPress
             return array_merge($body, $classes);
         });
     }
 
-    /**
-     * Get Classes To Run
-     *
-     * @return array
-     */
-    public function getClassesToRun()
+    public function getClassesToRun(): array
     {
         return $this->classesToRun;
     }

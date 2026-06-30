@@ -1,37 +1,27 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Sober\Controller;
 
 class Blade
 {
-    protected $data;
+    protected array $data;
+    protected ?object $first;
+    protected ?object $last;
 
-    /**
-     * Set Data
-     *
-     * Remove other array items should last item not include tree
-     */
-    protected function setBladeData($data)
+    protected function setBladeData(array $data): static
     {
-        // Get __blade/__debugger key
-        $this->data = $data['__data']['__blade'];
+        $this->data = $data['__data']['__blade'] ?? [];
 
-        // Only worry about rewriting data if we have more than one class
         if (count($this->data) > 1) {
-            // Get first item from data array
-            $first = reset($this->data);
+            $this->first = reset($this->data);
+            $this->last = end($this->data);
 
-            // Get last item from data array
-            $last = end($this->data);
-
-            // If last item does not inherit tree and first class is App
-            if (!$last->tree && $first->class === 'App') {
-                // Rewrite $this->data with first (App) and last item in array
-                $this->data = [$first, $last];
-            // Else if $last does not inherit tree
-            } elseif (!$last->tree) {
-                // Rewrite $this->data with last item in array
-                $this->data = $last;
+            if (!$this->last->tree && $this->first->class === 'App') {
+                $this->data = [$this->first, $this->last];
+            } elseif (!$this->last->tree) {
+                $this->data = $this->last;
             }
         }
 

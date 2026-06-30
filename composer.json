@@ -1,9 +1,9 @@
 {
   "name": "y-collective/sage-9-controller",
-  "type": "package",
+  "type": "library",
   "license": "MIT",
   "description": "WordPress package to enable a basic controller when using Blade with Sage 9",
-  "homepage": "https://github.com/soberwp",
+  "homepage": "https://github.com/y-collective/sage-9-controller",
   "authors": [
     {
       "name": "Darren Jacoby",
@@ -18,7 +18,7 @@
     "issues": "https://github.com/y-collective/sage-9-controller/issues"
   },
   "require": {
-    "php": "^8.2|^8.3",
+    "php": "^8.2",
     "brain/hierarchy": "^3.2.0"
   },
   "require-dev": {
