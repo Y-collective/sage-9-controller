@@ -22,7 +22,7 @@
     "brain/hierarchy": "^3.2.0"
   },
   "require-dev": {
-    "squizlabs/php_codesniffer": "^3.11.2"
+    "squizlabs/php_codesniffer": "^3.13.6"
   },
   "autoload": {
     "psr-4": {
