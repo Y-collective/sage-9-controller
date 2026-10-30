@@ -1,3 +1,6 @@
+### Unreleased:
+* Raise minimum PHP to 8.3 (`>=8.3`), matching `y-collective/sage-lib`
+
 ### 3.0.0:
 * Modernize codebase for PHP 8.2+
 * Declare strict types in all files

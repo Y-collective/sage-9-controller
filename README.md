@@ -32,13 +32,13 @@ $ composer require y-collective/sage-9-controller:^3.0
 
 ### Migrating from 2.x.x to 3.x.x:
 
-Version 3.0.0 requires **PHP 8.2+** and upgrades `brain/hierarchy` to ^3.2.0. All source files now use strict types, typed properties, and typed return values. No API changes are needed in your Controller classes.
+Version 3.0.0 requires **PHP 8.2+** (raised to **PHP 8.3+** after 3.0.1, in line with `y-collective/sage-lib`) and upgrades `brain/hierarchy` to ^3.2.0. All source files now use strict types, typed properties, and typed return values. No API changes are needed in your Controller classes.
 
 If you were using `soberwp/controller:^2.1`, simply replace the package name in your `composer.json`.
 
 ### Requirements:
 
-* [PHP](http://php.net/manual/en/install.php) >= 8.2
+* [PHP](http://php.net/manual/en/install.php) >= 8.3
 
 ## Setup
 

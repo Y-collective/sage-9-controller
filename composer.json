@@ -18,7 +18,7 @@
     "issues": "https://github.com/y-collective/sage-9-controller/issues"
   },
   "require": {
-    "php": "^8.2",
+    "php": ">=8.3",
     "brain/hierarchy": "^3.2.0"
   },
   "require-dev": {
